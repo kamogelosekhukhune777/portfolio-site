@@ -1,0 +1,49 @@
+# Build the Go Binary.
+FROM golang:1.22 as portfolio-api
+
+# Disable CGO to ensure the binary is statically linked.
+ENV CGO_ENABLED 0
+
+ARG BUILD_REF
+
+# Copy the source code into the container.
+COPY . /portfolio-site
+
+# Build the bank binary.
+WORKDIR /portfolio-site/app/services/portfolio-api
+
+RUN go build -o /portfolio-site/app/services/portfolio-api/portfolio-site -ldflags "-X main.build=${BUILD_REF}"
+
+#===================================================================================================================================================
+# Run the Go Binary in Alpine.
+FROM alpine:3.19
+
+ARG BUILD_DATE
+ARG BUILD_REF
+
+# Create a group and user within the container
+RUN addgroup -g 1000 -S portfolio_service && \
+    adduser -u 1000 -G portfolio_service -S -h /home/apiuser apiuser
+
+# Copy the binary from a previous build stage and set ownership
+COPY --from=portfolio-api --chown=apiuser:portfolio_service /portfolio-site/app/services/portfolio-api/portfolio-site /portfolio-site/portfolio-site
+
+# Ensure the binary has execution permissions
+RUN chmod +x /portfolio-site/portfolio-site
+
+# Set the working directory
+WORKDIR /portfolio-site
+
+# Optional: Specify the user to run the container as
+USER apiuser
+
+# Default command to run the binary
+CMD ["./portfolio-site"]
+
+#===================================================================================================================================================
+
+# Add metadata to the image.
+LABEL org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.title="portfolio-api" \
+      org.opencontainers.image.authors="Kamogelo Sekhukhune <kamogelosekhukhune777@gmail.com>" \
+      org.opencontainers.image.revision="${BUILD_REF}"

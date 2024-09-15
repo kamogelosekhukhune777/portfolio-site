@@ -1,0 +1,19 @@
+services:
+  bank-api:
+    image: estate-service/bank-api:0.0.1 
+    pull_policy: never
+    container_name: estate-api
+    restart: unless-stopped 
+    ports:
+      - "4000:4000"
+      - "3000:3000"
+    networks:
+      bank-system-network:
+        ipv4_address: 10.5.0.15
+
+networks:
+  bank-system-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/24
