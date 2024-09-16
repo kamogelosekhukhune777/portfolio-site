@@ -54,3 +54,11 @@ dev-logs:
 dev-status:
 	@echo "Use 'docker-compose ps' to inspect containers."
 	docker-compose -f zarf/compose/docker-compose.yml ps
+
+
+#================================================================================================================================================================================
+#Modules Support
+
+tidy: 
+	go mod tidy 
+	go mod vendor
